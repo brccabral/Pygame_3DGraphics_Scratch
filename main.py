@@ -1,7 +1,9 @@
 import math
 import time
+from typing import List
 import pygame
 import sys
+from settings import pacman_points
 
 
 class Camera:
@@ -114,11 +116,8 @@ class GameWindow:
         pygame.mouse.set_visible(False)
         pygame.event.set_grab(True)
 
-        self.cubes = [
-            Cube((0, 0, 0)),
-            Cube((-2, 0, 0)),
-            Cube((2, 0, 0)),
-        ]
+        self.cubes: List[Cube] = []
+        self.show_edges = False
 
     def run(self):
         self.dt = time.time() - self.last_time
@@ -163,7 +162,8 @@ class GameWindow:
                         (self.center_width + int(x), self.center_height + int(y))
                     )
 
-                self.draw_edges(obj)
+                if self.show_edges:
+                    self.draw_edges(obj)
 
                 for face_index, face in enumerate(obj.faces):
                     x, y = screen_coords[face_index]
@@ -239,7 +239,17 @@ class GameWindow:
         # in pygame the rotation is clockwise
         return x * c - y * s, y * c + x * s
 
+    def add_cubes(self, points):
+        """Adds cubes at each point location. Points is a list of tuples containing coordinates (x,z)
+
+        Args:
+            points (tuple[int, int]): list of (x,z)
+        """
+        self.cubes = [Cube((x, 0, z)) for x, z in points]
+
 
 if __name__ == "__main__":
     game = GameWindow()
+    game.add_cubes(pacman_points)
+    game.show_edges = False
     game.run()
