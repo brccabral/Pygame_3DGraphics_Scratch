@@ -12,7 +12,9 @@ class Camera:
         self.rot = list(rot)
         self.mouse_sensitivity = 200
 
-    def update(self, dt, keys):
+    def update(self, dt):
+        keys = pygame.key.get_pressed()
+
         s = dt * 100
         if keys[pygame.K_q]:
             self.pos[1] += s
@@ -89,10 +91,14 @@ class GameWindow:
         while True:
             self.screen.fill("black")
 
-            for event in pygame.event.get([pygame.QUIT, pygame.MOUSEMOTION]):
+            for event in pygame.event.get([pygame.QUIT, pygame.KEYDOWN]):
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
 
             for edge in self.edges:
                 vertices = self.verts[edge[0]], self.verts[edge[1]]
@@ -116,11 +122,7 @@ class GameWindow:
             pygame.display.flip()
             self.clock.tick(self.fps)
 
-            keys = pygame.key.get_pressed()
-            self.camera.update(self.dt, keys)
-            if keys[pygame.K_ESCAPE]:
-                pygame.quit()
-                sys.exit()
+            self.camera.update(self.dt)
 
     def rotate2d(self, pos, radian):
         x, y = pos
