@@ -148,25 +148,41 @@ class GameWindow:
             face_list = []
             face_color = []
             depth = []
-            for i, face in enumerate(self.faces):
+            for face_index, face in enumerate(self.faces):
+                x, y = screen_coords[face_index]
                 on_screen = False
-                for v in face:
-                    # z coord of vert
-                    if vert_list[v][2] > 0:
+                for face_vertice in face:
+                    z = vert_list[face_vertice][2]
+
+                    # check if face is on screen
+                    if z > 0 and x > 0 and x < self.width and y > 0 and y < self.height:
                         on_screen = True
                         break
+
                 if on_screen:
-                    coords = [screen_coords[f] for f in face]
+                    coords = [screen_coords[on_index] for on_index in face]
                     face_list.append(coords)
-                    face_color.append(self.colors[i])
+                    face_color.append(self.colors[face_index])
 
                     depth.append(
-                        sum(sum(vert_list[j][i] for j in face) ** 2 for i in range(3))
+                        sum(
+                            sum(
+                                vert_list[face_screen_index][p_index]
+                                for face_screen_index in face
+                            )
+                            ** 2
+                            for p_index in range(3)
+                        )
                     )
 
             order = sorted(range(len(face_list)), key=lambda i: depth[i], reverse=True)
-            for i in order:
-                pygame.draw.polygon(self.screen, face_color[i], face_list[i])
+            for order_index in order:
+                try:
+                    pygame.draw.polygon(
+                        self.screen, face_color[order_index], face_list[order_index]
+                    )
+                except Exception:
+                    pass
 
             pygame.display.flip()
             self.clock.tick(self.fps)
