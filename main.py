@@ -100,6 +100,7 @@ class Cube:
 class GameWindow:
     def __init__(self):
         pygame.init()
+        pygame.display.set_caption('3D Graphics')
         self.width = 800
         self.height = 600
         self.fov = min(self.width, self.height)
