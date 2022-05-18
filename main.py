@@ -100,7 +100,7 @@ class Cube:
 class GameWindow:
     def __init__(self):
         pygame.init()
-        pygame.display.set_caption('3D Graphics')
+        pygame.display.set_caption("3D Graphics")
         self.width = 800
         self.height = 600
         self.fov = min(self.width, self.height)
@@ -127,7 +127,7 @@ class GameWindow:
         self.last_time = time.time()
 
         while True:
-            self.screen.fill("black")
+            self.screen.fill((128, 128, 255))
 
             for event in pygame.event.get([pygame.QUIT, pygame.KEYDOWN]):
                 if event.type == pygame.QUIT:
@@ -252,7 +252,7 @@ class GameWindow:
 
 
 if __name__ == "__main__":
-    os.environ['SDL_VIDEO_CENTERED'] = '1'
+    os.environ["SDL_VIDEO_CENTERED"] = "1"
     game = GameWindow()
     game.add_cubes(pacman_points)
     game.show_edges = False
