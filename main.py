@@ -1,3 +1,4 @@
+import math
 import time
 import pygame
 import sys
@@ -68,11 +69,15 @@ class GameWindow:
         )
 
         self.camera = Camera((0, 0, -5))
+        self.radian = 0
 
     def run(self):
         self.dt = time.time() - self.last_time
         self.last_time = time.time()
+
         while True:
+            self.radian += self.dt * 1000
+
             self.screen.fill("black")
 
             for event in pygame.event.get([pygame.QUIT]):
@@ -89,6 +94,8 @@ class GameWindow:
                     y -= self.camera.pos[1]
                     z -= self.camera.pos[2]
 
+                    x, z = self.rotate2d((x, z), self.radian)
+
                     f = self.center_width / z
                     x, y = x * f, y * f
                     points.append(
@@ -101,6 +108,13 @@ class GameWindow:
 
             keys = pygame.key.get_pressed()
             self.camera.update(self.dt, keys)
+
+    def rotate2d(self, pos, radian):
+        x, y = pos
+        s, c = math.sin(radian), math.cos(radian)
+
+        # in pygame the rotation is clockwise
+        return x * c - y * s, y * c + x * s
 
 
 if __name__ == "__main__":
