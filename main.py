@@ -58,6 +58,20 @@ class Camera:
             self.pos[0] += y
             self.pos[2] -= x
 
+        # control minZ to clip vertices
+        if keys[pygame.K_0]:
+            self.minZ = 0.4
+        if keys[pygame.K_1]:
+            self.minZ = 1
+        if keys[pygame.K_2]:
+            self.minZ = 2
+        if keys[pygame.K_9]:
+            self.minZ = 9
+        if keys[pygame.K_MINUS]:
+            self.minZ = max(0.4, self.minZ - 50 * dt)
+        if keys[pygame.K_EQUALS]:
+            self.minZ += 50 * dt
+
         x, y = pygame.mouse.get_rel()
         x /= self.mouse_sensitivity
         y /= self.mouse_sensitivity
