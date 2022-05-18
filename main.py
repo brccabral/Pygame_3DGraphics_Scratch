@@ -14,6 +14,7 @@ class Camera:
         self.pos = list(pos)
         self.rot = list(rot)
         self.mouse_sensitivity = 200
+        self.minZ = 1
 
     @property
     def rotX(self) -> Tuple[float, float]:
@@ -121,9 +122,16 @@ class GameWindow:
         pygame.display.set_caption("3D Graphics")
         self.width = 800
         self.height = 600
-        self.fov = min(self.width, self.height)
         self.center_width = self.width // 2
         self.center_height = self.height // 2
+
+        self.fov = 90 / 180 * math.pi
+        self.half_fov = self.fov / 2
+        self.projY = self.center_height / math.tan(self.half_fov)
+        self.projX = (
+            self.center_width / math.tan(self.half_fov) / (self.width / self.height)
+        )
+
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.clock = pygame.time.Clock()
         self.last_time = time.time()
@@ -132,8 +140,6 @@ class GameWindow:
 
         self.camera = Camera((0, 0, -5))
 
-        # pygame.event.get()
-        # pygame.mouse.get_rel()
         pygame.mouse.set_visible(False)
         pygame.event.set_grab(True)
 
@@ -164,56 +170,46 @@ class GameWindow:
 
             for obj in self.cubes:
 
-                # update verts coordinates from camera position
-                vert_list = []
-                screen_coords = []
-                for vert in obj.verts:
-
-                    x, y, z = self.get3D(vert)
-
-                    vert_list.append((x, y, z))
-
-                    f = self.fov / z
-                    x, y = x * f, y * f
-                    screen_coords.append(
-                        (self.center_width + int(x), self.center_height + int(y))
-                    )
-
                 if self.show_edges:
                     self.draw_edges(obj)
 
+                # update obj verts coordinates from camera position
+                vert_list = [self.get3D(v) for v in obj.verts]
+
                 for face_index, face in enumerate(obj.faces):
-                    x, y = screen_coords[face_index]
-                    on_screen = False
-                    for face_vertice in face:
-                        z = vert_list[face_vertice][2]
+                    # get verts for one face
+                    verts = [vert_list[vert_index] for vert_index in face]
 
-                        # check if face is on screen
-                        if (
-                            z > 0
-                            and x > 0
-                            and x < self.width
-                            and y > 0
-                            and y < self.height
-                        ):
-                            on_screen = True
-                            break
-
-                    if on_screen:
-                        coords = [screen_coords[on_index] for on_index in face]
-                        face_list.append(coords)
-                        face_color.append(obj.colors[face_index])
-
-                        depth.append(
-                            sum(
-                                sum(
-                                    vert_list[face_screen_index][p_index]
-                                    for face_screen_index in face
+                    # clip verts
+                    # creates a new edge for this face
+                    i = 0
+                    while i < len(verts):
+                        if verts[i][2] < self.camera.minZ:  # behind camera
+                            sides = []
+                            prev_vert = verts[i - 1]
+                            next_vert = verts[(i + 1) % len(verts)]
+                            if prev_vert[2] > self.camera.minZ:
+                                sides.append(
+                                    self.getZ(verts[i], prev_vert, self.camera.minZ)
                                 )
-                                ** 2
-                                for p_index in range(3)
+                            if next_vert[2] > self.camera.minZ:
+                                sides.append(
+                                    self.getZ(verts[i], next_vert, self.camera.minZ)
+                                )
+                            verts = verts[:i] + sides + verts[i + 1 :]
+                            i += len(sides) - 1
+                        i += 1
+
+                    if len(verts) > 2:
+                        # add face (gen 2d poly / get color / average face depth)
+                        face_list.append([self.get2D(v) for v in verts])
+                        face_color.append(obj.colors[face_index])
+                        depth += [
+                            sum(
+                                sum(v[i] / len(verts) for v in verts) ** 2
+                                for i in range(3)
                             )
-                        )
+                        ]
 
             # draw all faces from all objects
             order = sorted(range(len(face_list)), key=lambda i: depth[i], reverse=True)
@@ -289,6 +285,39 @@ class GameWindow:
         y, z = self.rotate2d((y, z), self.camera.rotX)
 
         return x, y, z
+
+    def get2D(self, vert: Tuple[float, float, float]) -> Tuple[float, float]:
+        """Convers 3D to 2D projection
+
+        Args:
+            vert (Tuple[float, float, float]): vertice with x,y,z coords
+
+        Returns:
+            Tuple[float, float]: x,y screen coords
+        """
+        return self.center_width + int(
+            vert[0] / vert[2] * self.projX
+        ), self.center_height + int(vert[1] / vert[2] * self.projY)
+
+    def getZ(
+        self, A: Tuple[float, float, float], B: Tuple[float, float, float], newZ: float
+    ) -> Tuple[float, float, float]:
+        """Creates a new vertice at newZ based on verts A and B
+
+        Args:
+            A (Tuple[float, float, float]): vertice A
+            B (Tuple[float, float, float]): vertice B
+            newZ (float): clip posistion Z
+
+        Returns:
+            Tuple[float, float, float]: new vertice
+        """
+
+        if B[2] == A[2] or newZ < A[2] or newZ > B[2]:
+            return None
+        dx, dy, dz = B[0] - A[0], B[1] - A[1], B[2] - A[2]
+        i = (newZ - A[2]) / dz
+        return A[0] + dx * i, A[1] + dy * i, newZ
 
 
 if __name__ == "__main__":
