@@ -21,14 +21,20 @@ class Camera:
         if keys[pygame.K_e]:
             self.pos[1] -= s
 
+        x, y = s * math.sin(self.rot[1]), s * math.cos(self.rot[1])
+
         if keys[pygame.K_w]:
-            self.pos[2] += s
+            self.pos[0] += x
+            self.pos[2] += y
         if keys[pygame.K_s]:
-            self.pos[2] -= s
+            self.pos[0] -= x
+            self.pos[2] -= y
         if keys[pygame.K_a]:
-            self.pos[0] -= s
+            self.pos[0] -= y
+            self.pos[2] += x
         if keys[pygame.K_d]:
-            self.pos[0] += s
+            self.pos[0] += y
+            self.pos[2] -= x
 
         x, y = pygame.mouse.get_rel()
         x /= self.mouse_sensitivity
