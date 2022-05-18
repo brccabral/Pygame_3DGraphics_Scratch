@@ -83,6 +83,24 @@ class GameWindow:
             (3, 7),
         )
 
+        self.faces = (
+            (0, 1, 2, 3),
+            (4, 5, 6, 7),
+            (0, 1, 5, 4),
+            (2, 3, 7, 6),
+            (0, 3, 7, 4),
+            (1, 2, 6, 5),
+        )
+
+        self.colors = (
+            (255, 0, 0),
+            (255, 128, 0),
+            (255, 255, 0),
+            (255, 255, 255),
+            (0, 0, 255),
+            (0, 255, 0),
+        )
+
         self.camera = Camera((0, 0, -5))
 
         # pygame.event.get()
@@ -106,29 +124,67 @@ class GameWindow:
                         pygame.quit()
                         sys.exit()
 
-            for edge in self.edges:
-                vertices = self.verts[edge[0]], self.verts[edge[1]]
-                points = []
-                for x, y, z in vertices:
+            # update verts coordinates from camera position
+            vert_list = []
+            screen_coords = []
+            for x, y, z in self.verts:
+                x -= self.camera.pos[0]
+                y -= self.camera.pos[1]
+                z -= self.camera.pos[2]
 
-                    x -= self.camera.pos[0]
-                    y -= self.camera.pos[1]
-                    z -= self.camera.pos[2]
+                x, z = self.rotate2d((x, z), self.camera.rot[1])
+                y, z = self.rotate2d((y, z), self.camera.rot[0])
 
-                    x, z = self.rotate2d((x, z), self.camera.rot[1])
-                    y, z = self.rotate2d((y, z), self.camera.rot[0])
+                vert_list.append((x, y, z))
 
-                    f = self.center_width / z
-                    x, y = x * f, y * f
-                    points.append(
-                        (self.center_width + int(x), self.center_height + int(y))
-                    )
-                pygame.draw.line(self.screen, (255, 255, 255), points[0], points[1], 1)
+                f = self.center_width / z
+                x, y = x * f, y * f
+                screen_coords.append(
+                    (self.center_width + int(x), self.center_height + int(y))
+                )
+
+            self.draw_edges()
+
+            face_list = []
+            face_color = []
+            for face in self.faces:
+                on_screen = False
+                for v in face:
+                    # z coord of vert
+                    if vert_list[v][2] > 0:
+                        on_screen = True
+                        break
+                if on_screen:
+                    coords = [screen_coords[f] for f in face]
+                    face_list.append(coords)
+                    face_color.append(self.colors[self.faces.index(face)])
+
+            for i, face in enumerate(face_list):
+                pygame.draw.polygon(self.screen, face_color[i], face_list[i])
 
             pygame.display.flip()
             self.clock.tick(self.fps)
 
             self.camera.update(self.dt)
+
+    def draw_edges(self):
+
+        for edge in self.edges:
+            vertices = self.verts[edge[0]], self.verts[edge[1]]
+            points = []
+            for x, y, z in vertices:
+
+                x -= self.camera.pos[0]
+                y -= self.camera.pos[1]
+                z -= self.camera.pos[2]
+
+                x, z = self.rotate2d((x, z), self.camera.rot[1])
+                y, z = self.rotate2d((y, z), self.camera.rot[0])
+
+                f = self.center_width / z
+                x, y = x * f, y * f
+                points.append((self.center_width + int(x), self.center_height + int(y)))
+            pygame.draw.line(self.screen, (255, 255, 255), points[0], points[1], 1)
 
     def rotate2d(self, pos, radian):
         x, y = pos
