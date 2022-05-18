@@ -99,8 +99,9 @@ class Cube:
 class GameWindow:
     def __init__(self):
         pygame.init()
-        self.width = 400
-        self.height = 400
+        self.width = 800
+        self.height = 600
+        self.fov = min(self.width, self.height)
         self.center_width = self.width // 2
         self.center_height = self.height // 2
         self.screen = pygame.display.set_mode((self.width, self.height))
@@ -156,7 +157,7 @@ class GameWindow:
 
                     vert_list.append((x, y, z))
 
-                    f = self.center_width / z
+                    f = self.fov / z
                     x, y = x * f, y * f
                     screen_coords.append(
                         (self.center_width + int(x), self.center_height + int(y))
@@ -227,7 +228,7 @@ class GameWindow:
                 x, z = self.rotate2d((x, z), self.camera.rot[1])
                 y, z = self.rotate2d((y, z), self.camera.rot[0])
 
-                f = self.center_width / z
+                f = self.fov / z
                 x, y = x * f, y * f
                 points.append((self.center_width + int(x), self.center_height + int(y)))
             pygame.draw.line(self.screen, (255, 255, 255), points[0], points[1], 1)
