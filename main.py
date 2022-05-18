@@ -147,7 +147,8 @@ class GameWindow:
 
             face_list = []
             face_color = []
-            for face in self.faces:
+            depth = []
+            for i, face in enumerate(self.faces):
                 on_screen = False
                 for v in face:
                     # z coord of vert
@@ -157,9 +158,14 @@ class GameWindow:
                 if on_screen:
                     coords = [screen_coords[f] for f in face]
                     face_list.append(coords)
-                    face_color.append(self.colors[self.faces.index(face)])
+                    face_color.append(self.colors[i])
 
-            for i, face in enumerate(face_list):
+                    depth.append(
+                        sum(sum(vert_list[j][i] for j in face) ** 2 for i in range(3))
+                    )
+
+            order = sorted(range(len(face_list)), key=lambda i: depth[i], reverse=True)
+            for i in order:
                 pygame.draw.polygon(self.screen, face_color[i], face_list[i])
 
             pygame.display.flip()
