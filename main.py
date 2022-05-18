@@ -3,6 +3,7 @@ import time
 from typing import List
 import pygame
 import sys
+import os
 from settings import pacman_points
 
 
@@ -250,6 +251,7 @@ class GameWindow:
 
 
 if __name__ == "__main__":
+    os.environ['SDL_VIDEO_CENTERED'] = '1'
     game = GameWindow()
     game.add_cubes(pacman_points)
     game.show_edges = False
