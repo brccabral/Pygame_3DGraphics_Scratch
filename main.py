@@ -10,9 +10,10 @@ class Camera:
         # tuples are immutable and we need to change them
         self.pos = list(pos)
         self.rot = list(rot)
+        self.mouse_sensitivity = 200
 
     def update(self, dt, keys):
-        s = dt * 10000
+        s = dt * 100
         if keys[pygame.K_q]:
             self.pos[1] += s
         if keys[pygame.K_e]:
@@ -26,6 +27,12 @@ class Camera:
             self.pos[0] -= s
         if keys[pygame.K_d]:
             self.pos[0] += s
+
+        x, y = pygame.mouse.get_rel()
+        x /= self.mouse_sensitivity
+        y /= self.mouse_sensitivity
+        self.rot[0] += y
+        self.rot[1] += x
 
 
 class GameWindow:
@@ -69,18 +76,20 @@ class GameWindow:
         )
 
         self.camera = Camera((0, 0, -5))
-        self.radian = 0
+
+        # pygame.event.get()
+        # pygame.mouse.get_rel()
+        pygame.mouse.set_visible(False)
+        pygame.event.set_grab(True)
 
     def run(self):
         self.dt = time.time() - self.last_time
         self.last_time = time.time()
 
         while True:
-            self.radian += self.dt * 1000
-
             self.screen.fill("black")
 
-            for event in pygame.event.get([pygame.QUIT]):
+            for event in pygame.event.get([pygame.QUIT, pygame.MOUSEMOTION]):
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
@@ -94,7 +103,8 @@ class GameWindow:
                     y -= self.camera.pos[1]
                     z -= self.camera.pos[2]
 
-                    x, z = self.rotate2d((x, z), self.radian)
+                    x, z = self.rotate2d((x, z), self.camera.rot[1])
+                    y, z = self.rotate2d((y, z), self.camera.rot[0])
 
                     f = self.center_width / z
                     x, y = x * f, y * f
@@ -108,6 +118,9 @@ class GameWindow:
 
             keys = pygame.key.get_pressed()
             self.camera.update(self.dt, keys)
+            if keys[pygame.K_ESCAPE]:
+                pygame.quit()
+                sys.exit()
 
     def rotate2d(self, pos, radian):
         x, y = pos
