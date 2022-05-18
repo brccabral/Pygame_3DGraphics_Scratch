@@ -15,6 +15,24 @@ class Camera:
         self.rot = list(rot)
         self.mouse_sensitivity = 200
 
+    @property
+    def rotX(self) -> Tuple[float, float]:
+        """Sin and Cos for camera X
+
+        Returns:
+            Tuple[float, float]: Sin and Cos for camera X
+        """
+        return math.sin(self.rot[0]), math.cos(self.rot[0])
+
+    @property
+    def rotY(self) -> Tuple[float, float]:
+        """Sin and Cos for camera Y
+
+        Returns:
+            Tuple[float, float]: Sin and Cos for camera Y
+        """
+        return math.sin(self.rot[1]), math.cos(self.rot[1])
+
     def update(self, dt):
         keys = pygame.key.get_pressed()
 
@@ -226,9 +244,21 @@ class GameWindow:
                 points.append((self.center_width + int(x), self.center_height + int(y)))
             pygame.draw.line(self.screen, (255, 255, 255), points[0], points[1], 1)
 
-    def rotate2d(self, pos, radian):
+    def rotate2d(
+        self, pos: Tuple[float, float], rot: Tuple[float, float]
+    ) -> Tuple[float, float]:
+        """Rotate a point in a plain according to its rotation (sin, cos) in that plain
+
+        Args:
+            pos (Tuple[float, float]): x, y in a plain
+            rot (Tuple[float, float]): sin, cos in a plain
+
+        Returns:
+            Tuple[float, float]: resulted rotated x, y in that plain
+        """
+
         x, y = pos
-        s, c = math.sin(radian), math.cos(radian)
+        s, c = rot
 
         # in pygame the rotation is clockwise
         return x * c - y * s, y * c + x * s
@@ -255,8 +285,8 @@ class GameWindow:
             point[1] - self.camera.pos[1],
             point[2] - self.camera.pos[2],
         )
-        x, z = self.rotate2d((x, z), self.camera.rot[1])
-        y, z = self.rotate2d((y, z), self.camera.rot[0])
+        x, z = self.rotate2d((x, z), self.camera.rotY)
+        y, z = self.rotate2d((y, z), self.camera.rotX)
 
         return x, y, z
 
