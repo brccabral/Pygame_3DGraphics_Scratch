@@ -1,6 +1,6 @@
 import math
 import time
-from typing import List
+from typing import List, Tuple
 import pygame
 import sys
 import os
@@ -149,13 +149,9 @@ class GameWindow:
                 # update verts coordinates from camera position
                 vert_list = []
                 screen_coords = []
-                for x, y, z in obj.verts:
-                    x -= self.camera.pos[0]
-                    y -= self.camera.pos[1]
-                    z -= self.camera.pos[2]
+                for vert in obj.verts:
 
-                    x, z = self.rotate2d((x, z), self.camera.rot[1])
-                    y, z = self.rotate2d((y, z), self.camera.rot[0])
+                    x, y, z = self.get3D(vert)
 
                     vert_list.append((x, y, z))
 
@@ -221,14 +217,9 @@ class GameWindow:
         for edge in obj.edges:
             vertices = obj.verts[edge[0]], obj.verts[edge[1]]
             points = []
-            for x, y, z in vertices:
+            for vert in vertices:
 
-                x -= self.camera.pos[0]
-                y -= self.camera.pos[1]
-                z -= self.camera.pos[2]
-
-                x, z = self.rotate2d((x, z), self.camera.rot[1])
-                y, z = self.rotate2d((y, z), self.camera.rot[0])
+                x, y, z = self.get3D(vert)
 
                 f = self.fov / z
                 x, y = x * f, y * f
@@ -249,6 +240,25 @@ class GameWindow:
             points (tuple[int, int]): list of (x,z)
         """
         self.cubes = [Cube((x, 0, z)) for x, z in points]
+
+    def get3D(self, point: Tuple[float, float, float]) -> Tuple[float, float, float]:
+        """Translates x,y,z from 3D
+
+        Args:
+            point (Tuple[float, float, float]): _description_
+
+        Returns:
+            Tuple[float, float, float]: _description_
+        """
+        x, y, z = (
+            point[0] - self.camera.pos[0],
+            point[1] - self.camera.pos[1],
+            point[2] - self.camera.pos[2],
+        )
+        x, z = self.rotate2d((x, z), self.camera.rot[1])
+        y, z = self.rotate2d((y, z), self.camera.rot[0])
+
+        return x, y, z
 
 
 if __name__ == "__main__":
